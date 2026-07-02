@@ -147,7 +147,7 @@
     ],
 
     DESKTOP_APP: {
-      BASE_URL: 'http://localhost:5001',
+      BASE_URL: 'http://127.0.0.1:5001',
       ENABLED: true,
       CHECK_INTERVAL: 10000,
     },
