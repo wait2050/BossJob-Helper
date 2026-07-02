@@ -51,7 +51,7 @@ app = BUNDLE(
     icon=None,
     bundle_identifier='com.h1077.bosshelper',
     info_plist={
-        'LSBackgroundOnly': 'False',
+        'LSBackgroundOnly': False,
         'CFBundleDisplayName': 'Boss Helper Dashboard',
     }
 )
