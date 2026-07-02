@@ -1,3 +1,5 @@
 *.zip
 *.rar
 boss-desktop-app/build/boss-desktop-mac/
+boss-desktop-app/.venv/
+Boss_helper.app/

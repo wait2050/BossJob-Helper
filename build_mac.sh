@@ -2,6 +2,9 @@
 # Automated build script for macOS backend (.app bundle)
 set -e
 
+# Enforce running from the script directory
+cd "$(dirname "$0")"
+
 echo "Setting up virtual environment..."
 if [ ! -d "boss-desktop-app/.venv" ]; then
     python3 -m venv boss-desktop-app/.venv
@@ -21,9 +24,9 @@ cd boss-desktop-app
 cd ..
 
 echo "Moving build to root..."
-cp -R boss-desktop-app/dist/Boss_helper.app ./Boss_helper.app
+cp -a boss-desktop-app/dist/Boss_helper.app ./Boss_helper.app
 
 echo "Archiving to Boss_helper_mac.zip..."
-zip -r Boss_helper_mac.zip Boss_helper.app
+zip -ry Boss_helper_mac.zip Boss_helper.app
 
 echo "Build complete! Output: Boss_helper_mac.zip"
