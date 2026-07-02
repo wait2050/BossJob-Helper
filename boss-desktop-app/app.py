@@ -27,10 +27,14 @@ def create_app():
     app = Flask(__name__, static_folder='static', static_url_path='')
 
     if getattr(sys, 'frozen', False):
-        base_dir = os.path.dirname(sys.executable)
+        if sys.platform == 'darwin':
+            base_dir = os.path.expanduser('~/Library/Application Support/BossHelper')
+        else:
+            base_dir = os.path.dirname(sys.executable)
     else:
         base_dir = os.path.abspath(os.path.dirname(__file__))
 
+    os.makedirs(base_dir, exist_ok=True)
     data_dir = os.path.join(base_dir, 'data')
     os.makedirs(data_dir, exist_ok=True)
     db_path = os.path.join(data_dir, 'boss_desktop.db')
