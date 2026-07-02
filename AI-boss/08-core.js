@@ -799,7 +799,7 @@
         ? `福利包含[${state.welfareKeywords.join("、")}]`
         : "";
       const jobName = currentCard.querySelector(".job-name")?.textContent?.trim() || "";
-      const companyName = currentCard.querySelector(".company-name")?.textContent?.trim() || "";
+      const companyName = currentCard.querySelector(".company-name, a[href*='/gongsi/'], .boss-info")?.textContent?.trim() || "";
 
       // 公司去重检查（模糊匹配）
       if (companyName && CompanyDedup.isDuplicate(companyName)) {
@@ -821,7 +821,7 @@
           this._recordSuccess();
           chatBtn.click();
           const jobName = currentCard.querySelector(".job-name")?.textContent?.trim() || "";
-          const companyName = currentCard.querySelector(".company-name")?.textContent?.trim() || "";
+          const companyName = currentCard.querySelector(".company-name, a[href*='/gongsi/'], .boss-info")?.textContent?.trim() || "";
           const salary = currentCard.querySelector(".salary")?.textContent?.trim() || "";
           const location = currentCard.querySelector(".job-area")?.textContent?.trim() || "";
           if (companyName && jobName) {
@@ -2698,7 +2698,7 @@
 
       const currentCard = state.jobList && state.jobList[state.currentIndex - 1];
       const jobId = currentCard ? (currentCard.getAttribute('data-jobid') || currentCard.querySelector('[data-jobid]')?.getAttribute('data-jobid') || '') : '';
-      const companyName = currentCard ? (currentCard.querySelector('.company-name')?.textContent?.trim() || '') : '';
+      const companyName = currentCard ? (currentCard.querySelector('.company-name, a[href*="/gongsi/"], .boss-info')?.textContent?.trim() || '') : '';
       const jobName = currentCard ? (currentCard.querySelector('.job-name')?.textContent?.trim() || '') : '';
 
       // 第一级: localStorage 24h 缓存

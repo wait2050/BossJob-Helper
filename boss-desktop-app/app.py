@@ -42,11 +42,12 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # 只允许本地来源和 BOSS 直聘页面
+    # 只允许本地来源、BOSS 直聘页面以及 Chrome 插件来源
     CORS(app, resources={r"/api/*": {
         "origins": ["http://localhost:5001", "http://127.0.0.1:5001",
                     "http://localhost:5002", "http://127.0.0.1:5002",
-                    "https://www.zhipin.com"],
+                    "https://www.zhipin.com",
+                    r"^chrome-extension://.*"],
         "allow_private_network": True
     }})
 
