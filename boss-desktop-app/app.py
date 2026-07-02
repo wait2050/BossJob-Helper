@@ -95,7 +95,22 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    threading.Timer(1.5, lambda: webbrowser.open(f'http://localhost:{PORT}')).start()
+    
+    def launch_browser():
+        import subprocess
+        # Clean DYLD variables to prevent library loading issues in subprocesses on macOS
+        env = os.environ.copy()
+        for key in list(env.keys()):
+            if key.startswith('DYLD_'):
+                del env[key]
+        try:
+            subprocess.Popen(['open', f'http://127.0.0.1:{PORT}'], env=env)
+        except Exception as e:
+            # Fallback to standard webbrowser if subprocess fails
+            import webbrowser
+            webbrowser.open(f'http://127.0.0.1:{PORT}')
+
+    threading.Timer(1.5, launch_browser).start()
     print(f'\n  Boss海投小助手 已启动')
     print(f'  仪表盘: http://localhost:{PORT}')
     print(f'  按 Ctrl+C 退出\n')
