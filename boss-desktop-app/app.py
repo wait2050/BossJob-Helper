@@ -46,7 +46,8 @@ def create_app():
     CORS(app, resources={r"/api/*": {
         "origins": ["http://localhost:5001", "http://127.0.0.1:5001",
                     "http://localhost:5002", "http://127.0.0.1:5002",
-                    "https://www.zhipin.com"]
+                    "https://www.zhipin.com"],
+        "allow_private_network": True
     }})
 
     # 本地 token 存储到 app config
