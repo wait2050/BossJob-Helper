@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Boss海投助手</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="header"><h1>🤖 Boss海投助手</h1></div>
+
+  <!-- 登录面板（未登录时覆盖主界面） -->
+  <div id="loginPanel" class="login-overlay">
+    <div class="login-box">
+      <h2>🔐 登录 / 注册</h2>
+      <p class="login-tip">登录后额度绑定账号，换设备 / 重装不丢失</p>
+      <label>邮箱</label>
+      <input type="email" id="loginEmail" placeholder="请输入邮箱">
+      <label>验证码</label>
+      <div class="code-row">
+        <input type="text" id="loginCode" placeholder="6位验证码" maxlength="6" inputmode="numeric">
+        <button class="btn-sm" id="sendCodeBtn">发送验证码</button>
+      </div>
+      <button class="btn-go" id="loginBtn">登录 / 注册</button>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+  </div>
+
+  <!-- 主界面（登录后显示） -->
+  <div id="mainPanel" style="display:none">
+
+  <!-- ① 配置 -->
+  <section class="card">
+    <div class="card-h" data-toggle="cfg"><span>① 搜索配置</span><span class="chev">▾</span></div>
+    <div class="card-b" id="cfg">
+      <label>岗位关键词</label>
+      <input type="text" id="keyword" placeholder="如：售前顾问 / Python开发">
+      <label>城市（多城市用空格/逗号分隔）</label>
+      <input type="text" id="city" placeholder="如：深圳 北京 杭州">
+      <label>薪资范围（BOSS编码）</label>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin:4px 0;">
+        <span class="chip chip-salary" data-val="">不限</span>
+        <span class="chip chip-salary" data-val="402">3K以下</span>
+        <span class="chip chip-salary" data-val="403">3-5K</span>
+        <span class="chip chip-salary" data-val="404">5-10K</span>
+        <span class="chip chip-salary" data-val="405">10-20K</span>
+        <span class="chip chip-salary" data-val="406">20-50K</span>
+        <span class="chip chip-salary" data-val="407">50K以上</span>
+      </div>
+
+      <label>求职类型</label>
+      <div class="chip-group filter-group" data-key="jobType"></div>
+
+      <label>工作经验</label>
+      <div class="chip-group filter-group" data-key="experience"></div>
+
+      <label>学历要求</label>
+      <div class="chip-group filter-group" data-key="degree"></div>
+
+      <label>公司规模</label>
+      <div class="chip-group filter-group" data-key="scale"></div>
+
+      <label>公司黑名单（一行一个公司名，模糊匹配）</label>
+      <textarea id="blacklist" rows="3" placeholder="XX科技&#10;YY集团"></textarea>
+
+      <label>收集数量（每个城市）</label>
+      <input type="number" id="count" value="20" min="1" max="200">
+      <label>每日投递上限</label>
+      <input type="number" id="dailyLimit" value="100" min="1" max="500">
+    </div>
+  </section>
+
+  <!-- ② 额度与充值 -->
+  <section class="card">
+    <div class="card-h" data-toggle="creditCfg"><span>② 额度与充值</span><span class="chev">▾</span></div>
+    <div class="card-b" id="creditCfg">
+      <label>设备 ID</label>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <input type="text" id="clientId" readonly style="flex:1;background:#f5f5f5;font-size:11px;">
+        <button class="btn-sm" id="copyClientId">复制</button>
+      </div>
+
+      <div style="margin:12px 0;padding:16px;background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border-radius:10px;text-align:center;">
+        <div style="font-size:13px;color:#555;">可投递岗位数</div>
+        <b id="creditsDisplay" style="font-size:32px;color:#2e7d32;line-height:1.5;">--</b>
+        <div style="font-size:11px;color:#888;margin-top:2px;">已累计投递 <b id="totalDelivered">0</b> 个岗位</div>
+      </div>
+
+      <label>卡密充值</label>
+      <div style="display:flex;gap:4px;">
+        <input type="text" id="rechargeCode" placeholder="输入充值码，如 BOSS-A1B2C3D4" style="flex:1;">
+        <button class="btn-sm" id="rechargeBtn" style="background:#4285f4;color:#fff;">充值</button>
+      </div>
+
+      <a href="https://YOUR_FAKA_LINK.com" target="_blank"
+         style="display:block;text-align:center;margin-top:10px;padding:10px;
+                background:linear-gradient(135deg,#ff9800,#ff5722);border-radius:8px;color:#fff;
+                text-decoration:none;font-weight:bold;font-size:13px;">
+        💰 购买额度 — ¥10 / 100个岗位
+      </a>
+
+      <div style="margin-top:12px;padding:10px;background:#f3e5f5;border-radius:8px;">
+        <div style="font-size:12px;color:#6a1b9a;font-weight:bold;margin-bottom:6px;">🎁 邀请好友，双方各得 10 次投递</div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <input type="text" id="inviteLink" readonly style="flex:1;background:#fff;font-size:10px;padding:4px 6px;border-radius:4px;border:1px solid #ce93d8;">
+          <button class="btn-sm" id="copyInviteLink" style="background:#7b1fa2;color:#fff;">复制</button>
+        </div>
+        <div style="font-size:11px;color:#6a1b9a;margin-top:6px;">已邀请 <b id="inviteCount">0</b> 位好友 · 共获得 <b id="inviteEarned">0</b> 次额度</div>
+      </div>
+
+      <button class="btn-sm" id="logoutBtn" style="display:block;margin:10px auto 0;color:#999;background:#f5f5f5;font-size:11px;">退出登录</button>
+    </div>
+  </section>
+
+  <!-- ③ 投递设置 -->
+  <section class="card">
+    <div class="card-h" data-toggle="applyCfg"><span>③ 投递设置</span><span class="chev">▾</span></div>
+    <div class="card-b" id="applyCfg">
+      <label>招呼语自定义提示词（AI交叉引用简历+JD时使用）</label>
+      <textarea id="smartGreetingPrompt" rows="2" placeholder="如：强调大厂经验、突出项目管理能力、突出量化成果"></textarea>
+
+
+      <div class="toggle-row">
+        <span>自动发送附件简历</span>
+        <label class="switch"><input type="checkbox" id="useAutoSendResume"><span class="slider"></span></label>
+      </div>
+
+      <div class="toggle-row">
+        <span>自动发送图片简历</span>
+        <label class="switch"><input type="checkbox" id="useAutoSendImageResume"><span class="slider"></span></label>
+      </div>
+      <input type="file" id="imageResumeInput" accept="image/*" multiple style="display:none">
+      <button class="btn-sm" id="addImageBtn" style="display:none">+ 添加图片简历</button>
+      <div id="imageResumeList"></div>
+
+      <div class="toggle-row">
+        <span>排除猎头</span>
+        <label class="switch"><input type="checkbox" id="excludeHeadhunters"><span class="slider"></span></label>
+      </div>
+
+      <div class="toggle-row">
+        <span>排除实习生</span>
+        <label class="switch"><input type="checkbox" id="excludeInterns"><span class="slider"></span></label>
+      </div>
+
+      <label>对话策略</label>
+      <div class="strategy-row">
+        <label class="strategy-card" id="stratAggressive">
+          <input type="radio" name="strategy" value="aggressive">
+          <b>激进</b><span>突出成就</span>
+        </label>
+        <label class="strategy-card active" id="stratBalanced">
+          <input type="radio" name="strategy" value="balanced" checked>
+          <b>均衡</b><span>经验陈述</span>
+        </label>
+        <label class="strategy-card" id="stratConservative">
+          <input type="radio" name="strategy" value="conservative">
+          <b>保守</b><span>背景对齐</span>
+        </label>
+      </div>
+
+      <label>招聘者活跃状态（多选）</label>
+      <div class="chip-group" id="activityChips">
+        <span class="chip" data-val="不限">不限</span>
+        <span class="chip" data-val="在线">在线</span>
+        <span class="chip" data-val="刚刚活跃">刚刚活跃</span>
+        <span class="chip" data-val="今日活跃">今日活跃</span>
+        <span class="chip" data-val="3日内活跃">3日内</span>
+        <span class="chip" data-val="本周活跃">本周</span>
+        <span class="chip" data-val="2周内活跃">2周内</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 简历 & 匹配 -->
+  <section class="card">
+    <div class="card-h" data-toggle="resumeCfg"><span>④ 简历匹配</span><span class="chev">▾</span></div>
+    <div class="card-b" id="resumeCfg">
+      <label>多简历管理（按岗位方向准备）</label>
+      <input type="file" id="resumeFileInput" accept=".pdf,.doc,.docx,.txt" style="display:none">
+      <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
+        <select id="resumeSelector" style="flex:1;padding:6px;border-radius:6px;border:1px solid #d1d5db;font-size:12px;">
+          <option value="">默认简历</option>
+        </select>
+        <button class="btn-sm" id="analyzeResumeBtn" style="background:#e8f5e9;color:#2e7d32;" title="AI分析">🤖</button>
+        <button class="btn-sm" id="deleteResumeBtn" style="background:#fce4ec;color:#c62828;" title="删除当前简历">🗑</button>
+      </div>
+
+      <label>简历文本（用于生成 AI 招呼语）</label>
+      <textarea id="resumeText" rows="6" placeholder="粘贴你的简历内容：技能、项目经历、教育背景等，越详细越好。"></textarea>
+
+      <div class="toggle-row" style="display:none;">
+        <span>公司背景评估</span>
+        <label class="switch"><input type="checkbox" id="enableCompanyCheck"><span class="slider"></span></label>
+      </div>
+
+      <label>HR 不活跃阈值（天）</label>
+      <input type="number" id="hrInactiveDays" value="14" min="0" max="90">
+    </div>
+  </section>
+
+  <!-- ⑤ 运行 -->
+  <section class="card">
+    <div class="card-h"><span>⑤ 运行</span></div>
+    <div class="card-b">
+      <button class="btn-go" id="btnCollect">开始收集 + 投递</button>
+      <div class="toggle-row" style="margin-top:4px;">
+        <span>智能调度（工作日+避午休+自适应间隔）</span>
+        <label class="switch"><input type="checkbox" id="smartSchedule" checked><span class="slider"></span></label>
+      </div>
+      <div class="status-row">
+        <span id="phaseText">就绪</span>
+        <span id="progText"></span>
+      </div>
+      <div class="ctrl">
+        <button id="btnPause" disabled>暂停</button>
+        <button id="btnStop" disabled>停止</button>
+        <button id="btnReset">重置</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 审核确认 -->
+  <section class="card" id="reviewCard" style="display:none">
+    <div class="card-h"><span>📋 审核确认</span><span id="reviewCount" style="color:#4285f4;font-size:12px;"></span></div>
+    <div class="card-b">
+      <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+        <label style="margin:0;font-size:12px;cursor:pointer;"><input type="checkbox" id="selAll" checked> 全选</label>
+        <button class="btn-go" id="btnDeliver" style="flex:1;">投递选中</button>
+      </div>
+      <div id="reviewList" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
+  </section>
+
+  <!-- ⑥ 仪表盘 -->
+  <section class="card">
+    <div class="card-h" data-toggle="dash"><span>⑥ 求职仪表盘</span><span class="chev">▾</span></div>
+    <div class="card-b" id="dash">
+      <div class="dash-stats" id="dashStats">
+        <div class="dash-chip">总岗位 <b>0</b></div>
+        <div class="dash-chip applied">已投递 <b>0</b></div>
+        <div class="dash-chip interview">面试中 <b>0</b></div>
+        <div class="dash-chip rejected">已拒绝 <b>0</b></div>
+      </div>
+      <div class="funnel" id="funnel">
+        <div class="funnel-bar"><span>今日投递</span><div class="bar" id="barGreets"><i>0</i></div></div>
+        <div class="funnel-bar"><span>HR回复</span><div class="bar" id="barReplies"><i>0</i></div></div>
+        <div class="funnel-bar"><span>面试邀约</span><div class="bar" id="barInterviews"><i>0</i></div></div>
+      </div>
+      <div class="interview-card" id="interviewCard" style="display:none;margin-top:8px;padding:8px;background:#fff3e0;border:1px solid #ffcc80;border-radius:6px;font-size:12px;">
+        <b style="color:#e65100;">📅 近期面试</b>
+        <div id="interviewList"></div>
+        <button class="btn-sm" id="addInterviewBtn" style="margin-top:4px;">+ 添加面试</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑦ 日志 -->
+  <section class="card">
+    <div class="card-h"><span>日志</span><button class="mini-btn" id="clearLog">清空</button></div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <div class="footer">© 2026 Boss海投助手 · Chrome Extension</div>
+
+  </div><!-- /mainPanel -->
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
