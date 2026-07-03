@@ -1,0 +1,13 @@
+{
+  "name": "boss-helper-extension",
+  "version": "1.0.0",
+  "description": "Boss海投助手 Chrome 插件 - 混淆构建",
+  "scripts": {
+    "build": "node build.js",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.0",
+    "fs-extra": "^11.2.0"
+  }
+}
