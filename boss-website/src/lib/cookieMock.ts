@@ -1,16 +1,22 @@
 // Mock implementation of cookie and set-cookie-parser for client-only bundle
-export function parse() {
+function mockParse() {
   return {};
 }
 
-export function serialize() {
+mockParse.parse = mockParse;
+mockParse.serialize = function serialize() {
   return "";
-}
-
-export function parseString() {
+};
+mockParse.parseString = function parseString() {
   return [];
-}
-
-export function splitCookiesString() {
+};
+mockParse.splitCookiesString = function splitCookiesString() {
   return [];
-}
+};
+
+export const parse = mockParse.parse;
+export const serialize = mockParse.serialize;
+export const parseString = mockParse.parseString;
+export const splitCookiesString = mockParse.splitCookiesString;
+
+export default mockParse;
