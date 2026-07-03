@@ -1,4 +1,4 @@
-import { Rocket, Mail, Github } from "lucide-react";
+import { Rocket, Mail, Download } from "lucide-react";
 import { SITE, NAV_LINKS } from "@/lib/site";
 
 export default function Footer() {
@@ -59,7 +59,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="font-body flex items-center gap-2 text-sm text-cream/70 transition-colors hover:text-pink"
                 >
-                  <Github className="h-4 w-4" strokeWidth={2.5} />
+                  <Download className="h-4 w-4" strokeWidth={2.5} />
                   下载最新版本
                 </a>
               </li>
