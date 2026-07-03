@@ -71,7 +71,7 @@ export default function Footer() {
           <p className="font-body text-xs text-cream/50">
             © {year} Boss海投助手 · 仅供学习交流使用，请遵守 BOSS 直聘使用协议
           </p>
-          {SITE.ICP && (
+          {!!SITE.ICP && (
             <p className="font-body text-xs text-cream/50">
               备案号：{SITE.ICP}
             </p>
