@@ -3,7 +3,7 @@
 export const SITE = {
   name: "Boss海投助手",
   // 蓝奏云插件下载链接
-  LANZO_URL: "https://h2so4.lanzout.com/ig96c3u8b6od",
+  LANZO_URL: "https://h2so4.lanzout.com/iA0tG3ubt1vg",
   // 爱发卡购买额度链接
   BUY_URL: "https://pay.ldxp.cn/item/8caf0e",
   // 联系邮箱
