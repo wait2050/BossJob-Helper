@@ -436,16 +436,22 @@ async function runCollect() {
 
   // 筛选
   state.phase = 'screening'; pushPhase();
-  const applied = await chrome.storage.local.get('appliedCompanies');
-  const appliedSet = new Set((applied.appliedCompanies || '').split(','));
+  const { appliedCompanies, appliedHistory } = await chrome.storage.local.get(['appliedCompanies', 'appliedHistory']);
+  const companySet = new Set((appliedCompanies || '').split(',').filter(Boolean));
+  const historyList = appliedHistory || [];
+
+  // 建立岗位 ID 与 规范化(公司_岗位)的已投递集合
+  const appliedJobIds = new Set(historyList.map(h => h.id).filter(Boolean));
+  const appliedJobKeys = new Set(historyList.map(h => normalizeCompany(h.company || '') + '_' + (h.name || '').trim().toLowerCase()));
 
   state.queue = [];
   let countHeadhunter = 0;
   let countInterns = 0;
   let countInactive = 0;
   let countBlacklist = 0;
-  let countDuplicate = 0;
-  
+  let countDuplicateJob = 0;
+  let countDuplicateCompany = 0;
+
   for (const job of state.jobs) {
     if (state.aborted) break;
 
@@ -482,10 +488,20 @@ async function runCollect() {
       }
     }
 
-    // 公司去重
-    const norm = normalizeCompany(job.company || '');
-    if (norm && appliedSet.has(norm)) {
-      countDuplicate++;
+    // 岗位/公司去重校验
+    const normComp = normalizeCompany(job.company || '');
+    const normName = (job.name || '').trim().toLowerCase();
+    const jobKey = normComp + '_' + normName;
+
+    // 1. 岗位级去重 (匹配 ID 或 匹配 公司_岗位名称)
+    if ((job.id && appliedJobIds.has(job.id)) || appliedJobKeys.has(jobKey)) {
+      countDuplicateJob++;
+      continue;
+    }
+
+    // 2. 公司级去重
+    if (normComp && companySet.has(normComp)) {
+      countDuplicateCompany++;
       continue;
     }
 
@@ -501,7 +517,8 @@ async function runCollect() {
   if (countInterns > 0) log('  - 过滤实习生岗位: ' + countInterns + ' 个', 'warn');
   if (countInactive > 0) log('  - 过滤 HR 不活跃岗位: ' + countInactive + ' 个', 'warn');
   if (countBlacklist > 0) log('  - 过滤黑名单公司: ' + countBlacklist + ' 个', 'warn');
-  if (countDuplicate > 0) log('  - 过滤已投递过的重复公司: ' + countDuplicate + ' 个', 'warn');
+  if (countDuplicateJob > 0) log('  - 过滤已投递过的历史岗位: ' + countDuplicateJob + ' 个', 'warn');
+  if (countDuplicateCompany > 0) log('  - 过滤已投递过的重复公司: ' + countDuplicateCompany + ' 个', 'warn');
 
   // HR 职级排序 + 去重：每公司只保留 HR 职级最高的岗位
   const beforeRank = state.queue.length;
@@ -691,11 +708,36 @@ async function runDeliver() {
           log('  额度 -1，剩余 ' + deductData.credits + ' 个岗位');
         }
       } catch (e) { /* 扣费失败不影响投递结果 */ }
-      const norm = normalizeCompany(job.company || '');
-      const prev = await chrome.storage.local.get('appliedCompanies');
-      const set = new Set((prev.appliedCompanies || '').split(',').filter(Boolean));
-      set.add(norm);
-      await chrome.storage.local.set({ appliedCompanies: Array.from(set).join(',') });
+      const normComp = normalizeCompany(job.company || '');
+      const storageData = await chrome.storage.local.get(['appliedHistory', 'appliedCompanies']);
+      const currentHistory = storageData.appliedHistory || [];
+      const currentCompaniesSet = new Set((storageData.appliedCompanies || '').split(',').filter(Boolean));
+
+      // 构建历史记录条目
+      const newHistoryItem = {
+        id: job.id || '',
+        name: job.name || '',
+        company: job.company || '',
+        salary: job.salary || '',
+        hrName: job.hrName || '',
+        hrTitle: job.hrTitle || '',
+        applyTime: Date.now()
+      };
+
+      // 避免重复追加同一记录
+      const existsIndex = currentHistory.findIndex(h => (job.id && h.id === job.id) || (h.company === job.company && h.name === job.name));
+      if (existsIndex >= 0) {
+        currentHistory[existsIndex] = newHistoryItem;
+      } else {
+        currentHistory.unshift(newHistoryItem);
+      }
+
+      if (normComp) currentCompaniesSet.add(normComp);
+
+      await chrome.storage.local.set({
+        appliedHistory: currentHistory,
+        appliedCompanies: Array.from(currentCompaniesSet).join(',')
+      });
     } else {
       const errMsg = (r2 && r2.error) || '';
       const pageText = (r2 && r2.pageText) || '';

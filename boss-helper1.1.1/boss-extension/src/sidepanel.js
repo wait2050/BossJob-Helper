@@ -719,9 +719,128 @@ async function showMainPanel(clientId) {
   await checkInviteFromUrl();
 }
 
+// ===== 已投递历史记录管理 =====
+let appliedHistory = [];
+
+function formatDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${m}-${day} ${h}:${min}`;
+}
+
+async function loadAndRenderHistory() {
+  const data = await chrome.storage.local.get(['appliedHistory']);
+  appliedHistory = data.appliedHistory || [];
+  renderHistoryList();
+}
+
+function renderHistoryList() {
+  const listEl = $('historyList');
+  if (!listEl) return;
+  const searchVal = ($('historySearch').value || '').trim().toLowerCase();
+  
+  const filtered = appliedHistory.filter(item => {
+    if (!searchVal) return true;
+    const titleMatch = (item.name || '').toLowerCase().includes(searchVal);
+    const companyMatch = (item.company || '').toLowerCase().includes(searchVal);
+    return titleMatch || companyMatch;
+  });
+
+  $('historyCountText').textContent = '共 ' + appliedHistory.length + ' 条' + (searchVal ? ` (筛选出 ${filtered.length} 条)` : '');
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:12px 0;">' + (searchVal ? '未搜索到相关投递历史' : '暂无已投递历史') + '</div>';
+    return;
+  }
+
+  // 按时间降序
+  const sorted = [...filtered].sort((a, b) => (b.applyTime || 0) - (a.applyTime || 0));
+
+  listEl.innerHTML = sorted.map((item, idx) => {
+    const metaParts = [];
+    if (item.company) metaParts.push(item.company);
+    if (item.hrName || item.hrTitle) metaParts.push((item.hrName || '') + (item.hrTitle ? ` (${item.hrTitle})` : ''));
+    if (item.salary) metaParts.push(item.salary);
+
+    return `
+      <div class="history-item" data-id="${item.id || ''}" data-key="${encodeURIComponent((item.company || '') + '_' + (item.name || ''))}">
+        <div class="history-info">
+          <div class="history-title" title="${item.name || ''}">${item.name || '未知岗位'}</div>
+          <div class="history-meta">${metaParts.join(' · ')}</div>
+          <div class="history-time">⏱ ${formatDate(item.applyTime)}</div>
+        </div>
+        <button class="history-del-btn" title="删除此记录（删除后可重新投递）" data-id="${item.id || ''}" data-index="${idx}">✕</button>
+      </div>
+    `;
+  }).join('');
+
+  // 绑定删除按钮事件
+  listEl.querySelectorAll('.history-del-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const itemEl = btn.closest('.history-item');
+      const itemKey = decodeURIComponent(itemEl.dataset.key || '');
+      
+      // 删除此条记录
+      appliedHistory = appliedHistory.filter(item => {
+        if (id && item.id) return item.id !== id;
+        return ((item.company || '') + '_' + (item.name || '')) !== itemKey;
+      });
+
+      // 重新生成 appliedCompanies set 保证同步
+      const companySet = new Set(appliedHistory.map(item => item.company ? item.company.replace(/[（(].*?[）)]/g, '').replace(/有限(责任)?公司|股份有限(责任)?公司|集团有限公司?|有限公司/g, '').replace(/\s/g, '').toLowerCase() : '').filter(Boolean));
+      
+      await chrome.storage.local.set({
+        appliedHistory,
+        appliedCompanies: Array.from(companySet).join(',')
+      });
+
+      addLog('已从历史记录中移除该岗位（再次运行将可重新投递）', 'info');
+      renderHistoryList();
+    });
+  });
+}
+
+// 搜索筛选事件
+$('historySearch').addEventListener('input', () => {
+  renderHistoryList();
+});
+
+// 清空历史按钮
+$('btnClearHistory').addEventListener('click', async () => {
+  if (appliedHistory.length === 0) return addLog('历史记录本就为空', 'info');
+  if (!confirm('确定要清空全部已投递历史记录吗？\n清空后再次运行海投将不再自动过滤这些历史岗位/公司！')) return;
+
+  appliedHistory = [];
+  await chrome.storage.local.set({
+    appliedHistory: [],
+    appliedCompanies: ''
+  });
+
+  addLog('已清空全部投递历史', 'success');
+  renderHistoryList();
+});
+
+// 监听 storage 变化自动刷新历史与统计
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.appliedHistory) {
+    appliedHistory = changes.appliedHistory.newValue || [];
+    renderHistoryList();
+  }
+  if (changes.jobTracker) {
+    updateDashboard();
+  }
+});
+
 // 初始化：检查登录状态
 loadCfg();
 updateDashboard();
+loadAndRenderHistory();
 (async () => {
   const { sessionToken } = await chrome.storage.local.get('sessionToken');
   if (!sessionToken) {
@@ -756,3 +875,4 @@ updateDashboard();
     }
   }
 })();
+

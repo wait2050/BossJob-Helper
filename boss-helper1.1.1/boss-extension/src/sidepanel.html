@@ -256,9 +256,28 @@
     </div>
   </section>
 
-  <!-- ⑦ 日志 -->
+  <!-- ⑦ 已投递历史 -->
   <section class="card">
-    <div class="card-h"><span>日志</span><button class="mini-btn" id="clearLog">清空</button></div>
+    <div class="card-h" data-toggle="appliedHistoryCard">
+      <span>📜 已投递历史</span>
+      <span class="chev">▾</span>
+    </div>
+    <div class="card-b" id="appliedHistoryCard">
+      <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+        <input type="text" id="historySearch" placeholder="搜索公司 / 岗位名称..." style="flex:1;padding:5px 8px;font-size:12px;border:1px solid #ddd;border-radius:4px;">
+        <button class="mini-btn" id="btnClearHistory" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;">清空历史</button>
+      </div>
+      <div style="font-size:11px;color:#666;margin-bottom:6px;display:flex;justify-content:space-between;">
+        <span>再次投递时自动过滤</span>
+        <span id="historyCountText">共 0 条</span>
+      </div>
+      <div id="historyList" class="history-list" style="max-height:220px;overflow-y:auto;"></div>
+    </div>
+  </section>
+
+  <!-- ⑧ 日志 -->
+  <section class="card">
+    <div class="card-h"><span>⑧ 日志</span><button class="mini-btn" id="clearLog">清空</button></div>
     <div class="log" id="log"></div>
   </section>
 

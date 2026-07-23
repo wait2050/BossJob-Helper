@@ -141,3 +141,21 @@ button { cursor: pointer; border: none; border-radius: 6px; font-size: 13px; tra
 .chip-group.filter-group { margin: 4px 0; }
 .chip-filter { background: #f1f3f4; color: #555; }
 .chip-filter.active { background: #4285f4; color: #fff; }
+
+/* 已投递历史列表 */
+.history-list { font-size: 12px; }
+.history-item {
+  padding: 8px; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;
+  transition: background 0.15s ease;
+}
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { background: #f8fafc; }
+.history-info { flex: 1; min-width: 0; padding-right: 8px; }
+.history-title { font-weight: bold; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-meta { font-size: 11px; color: #64748b; margin-top: 2px; }
+.history-time { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+.history-del-btn {
+  background: transparent; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 2px 4px;
+}
+.history-del-btn:hover { color: #ef4444; }
+
