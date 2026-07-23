@@ -106,6 +106,17 @@ function pushPhase() {
 function progress(cur, total, label) {
   chrome.runtime.sendMessage({ type: 'PROGRESS', cur, total, label: label || '' }).catch(() => {});
 }
+function notifyJobStatus(job, index, status, error) {
+  chrome.runtime.sendMessage({
+    type: 'JOB_STATUS',
+    index,
+    jobId: job.id || '',
+    company: job.company || '',
+    name: job.name || '',
+    status,
+    error: error || ''
+  }).catch(() => {});
+}
 async function getCfg() {
   return chrome.storage.local.get([
     'keyword', 'city', 'count', 'dailyLimit',
@@ -595,6 +606,7 @@ async function runDeliver() {
     if (daily.reached) { log('今日投递已达上限（' + daily.limit + '）', 'warn'); break; }
 
     const job = state.queue[i];
+    notifyJobStatus(job, i, 'delivering');
     log('[' + (i + 1) + '/' + total + '] ' + job.name + ' - ' + (job.company || ''));
 
     // 1. 打开岗位详情页或搜索页，读取 JD
@@ -623,7 +635,12 @@ async function runDeliver() {
     log('  生成招呼语...');
     let greeting = '';
     try { greeting = await generateGreeting(cfg, job, jd); } catch (e) { log('  生成失败：' + e.message, 'error'); }
-    if (!greeting) { log('  招呼语为空，跳过', 'warn'); progress(i + 1, total, '投递'); continue; }
+    if (!greeting) {
+      log('  招呼语为空，跳过', 'warn');
+      notifyJobStatus(job, i, 'failed', '招呼语为空');
+      progress(i + 1, total, '投递');
+      continue;
+    }
 
     // 3. 点击"立即沟通" → 跳转聊天页
     log('  建立联系...');
@@ -659,6 +676,7 @@ async function runDeliver() {
 
     if (!chatTab) {
       log('  未进入聊天页，跳过', 'error');
+      notifyJobStatus(job, i, 'failed', '未能进入聊天页');
       progress(i + 1, total, '投递');
       continue;
     }
@@ -686,6 +704,7 @@ async function runDeliver() {
 
     if (r2 && r2.success) {
       log('  ✓ 投递成功', 'success');
+      notifyJobStatus(job, i, 'success');
       state.results.push({ id: job.id, name: job.name, ok: true });
       await incrDailyCount(daily.key);
       await updateJobTracker('applied', true);
@@ -742,6 +761,7 @@ async function runDeliver() {
       const errMsg = (r2 && r2.error) || '';
       const pageText = (r2 && r2.pageText) || '';
       log('  失败：' + errMsg, 'error');
+      notifyJobStatus(job, i, 'failed', errMsg || '发送未确认');
       state.results.push({ id: job.id, name: job.name, ok: false, msg: errMsg });
       const riskDelay = RiskManager.onError(pageText);
       if (RiskManager.isDangerous()) {

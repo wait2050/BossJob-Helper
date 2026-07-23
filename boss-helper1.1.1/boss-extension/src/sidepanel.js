@@ -403,11 +403,14 @@ function renderReviewList(filtered) {
       const i = globalIdx++;
       const bossBadge = j.isBoss ? '<span style="background:#fff3e0;color:#e65100;padding:0 4px;border-radius:3px;font-size:10px;margin-left:4px;">👔直招</span>' : '';
       const hrInfo = j.hrTitle ? ' · ' + (j.hrName || '') + ' ' + j.hrTitle : '';
-      html += '<label class="review-item" style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;cursor:pointer;">' +
+      html += '<label class="review-item" style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;cursor:pointer;" data-idx="' + i + '">' +
         '<input type="checkbox" class="review-cb" data-idx="' + i + '" checked style="margin-top:2px;">' +
-        '<div style="flex:1;">' +
-        '<b>' + (j.name || '未知') + '</b>' + bossBadge +
-        '<br><span style="color:#666;">' + (j.salary || '') + ' · ' + (j.location || j.city || '') + hrInfo + '</span>' +
+        '<div style="flex:1;min-width:0;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;"><b>' + (j.name || '未知') + '</b>' + bossBadge + '</span>' +
+        '<span class="job-status-badge pending" id="job-status-badge-' + i + '">待投递</span>' +
+        '</div>' +
+        '<span style="color:#666;font-size:11px;">' + (j.salary || '') + ' · ' + (j.location || j.city || '') + hrInfo + '</span>' +
         '</div></label>';
     }
     if (jobs.length > 1) html += '</div>';
@@ -452,8 +455,12 @@ $('btnDeliver').addEventListener('click', async () => {
   });
   if (!selected.length) return addLog('请至少勾选一个岗位', 'warn');
 
-  addLog('投递 ' + selected.length + ' 个选中岗位', 'info');
-  $('reviewCard').style.display = 'none';
+  addLog('开始投递 ' + selected.length + ' 个选中岗位', 'info');
+  // 保持 reviewCard 显示，但在投递过程中禁用按钮与勾选
+  $('btnDeliver').disabled = true;
+  $('btnDeliver').textContent = '🚀 正在投递...';
+  $('reviewList').querySelectorAll('.review-cb').forEach(cb => cb.disabled = true);
+  $('selAll').disabled = true;
   setRunning(true);
   $('phaseText').textContent = '投递中...';
 
@@ -471,10 +478,29 @@ chrome.runtime.onMessage.addListener(msg => {
     }
   }
   if (msg.type === 'LOG') { addLog(msg.text, msg.level); }
+  if (msg.type === 'JOB_STATUS') {
+    const badge = document.getElementById('job-status-badge-' + msg.index);
+    if (badge) {
+      if (msg.status === 'delivering') {
+        badge.className = 'job-status-badge delivering';
+        badge.textContent = '⏳ 投递中...';
+      } else if (msg.status === 'success') {
+        badge.className = 'job-status-badge success';
+        badge.textContent = '✓ 成功';
+      } else if (msg.status === 'failed') {
+        badge.className = 'job-status-badge failed';
+        badge.textContent = '✕ 失败';
+        badge.title = msg.error || '发送未确认';
+      }
+    }
+  }
   if (msg.type === 'PHASE') {
     const map = { idle: '就绪', collecting: '收集中...', screening: '筛选中...', review: '待确认', delivering: '投递中...', done: '完成' };
     $('phaseText').textContent = map[msg.phase] || msg.phase;
-    if (msg.phase === 'done' || msg.phase === 'idle') setRunning(false);
+    if (msg.phase === 'done' || msg.phase === 'idle') {
+      setRunning(false);
+      unlockReviewControls();
+    }
   }
   if (msg.type === 'PROGRESS') {
     $('progText').textContent = msg.cur + '/' + msg.total + ' ' + msg.label;
@@ -486,8 +512,18 @@ chrome.runtime.onMessage.addListener(msg => {
   if (msg.type === 'DONE') {
     addLog('投递完成：成功 ' + msg.ok + ' | 失败 ' + msg.fail, msg.ok > 0 ? 'success' : 'warn');
     setRunning(false);
+    unlockReviewControls();
   }
 });
+
+function unlockReviewControls() {
+  if ($('btnDeliver')) {
+    $('btnDeliver').disabled = false;
+    $('btnDeliver').textContent = '投递选中';
+  }
+  $('reviewList').querySelectorAll('.review-cb').forEach(cb => cb.disabled = false);
+  if ($('selAll')) $('selAll').disabled = false;
+}
 
 // ── 仪表盘刷新 ──
 async function updateDashboard() {

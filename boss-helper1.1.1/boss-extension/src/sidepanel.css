@@ -159,3 +159,13 @@ button { cursor: pointer; border: none; border-radius: 6px; font-size: 13px; tra
 }
 .history-del-btn:hover { color: #ef4444; }
 
+/* 审核确认列表中投递状态徽章 */
+.job-status-badge {
+  font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: normal; margin-left: 6px; white-space: nowrap; display: inline-block;
+}
+.job-status-badge.pending { background: #f1f5f9; color: #64748b; }
+.job-status-badge.delivering { background: #e0f2fe; color: #0284c7; font-weight: bold; }
+.job-status-badge.success { background: #dcfce7; color: #16a34a; font-weight: bold; }
+.job-status-badge.failed { background: #fee2e2; color: #dc2626; font-weight: bold; }
+
+
