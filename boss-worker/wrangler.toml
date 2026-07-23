@@ -1,0 +1,19 @@
+name = "boss-helper-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# 通过 custom_domain 自动创建 DNS 记录并绑定路由
+# 国内访问 boss.morpheus95.xyz 即可调用 API（绕过被反诈标记的 luckyioo.cc.cd）
+routes = [
+  { pattern = "boss.morpheus95.xyz", custom_domain = true }
+]
+
+[vars]
+AI_API_URL = "https://api.deepseek.com/v1/chat/completions"
+AI_MODEL   = "deepseek-v4-flash"
+# AI_API_KEY 通过 wrangler secret 设置，不写在文件中
+# 执行命令: wrangler secret put AI_API_KEY
+
+[[kv_namespaces]]
+binding = "BOSS_KV"
+id = "a24b19824de24961b48270384f6bb613"

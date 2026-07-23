@@ -3,3 +3,8 @@
 boss-desktop-app/build/boss-desktop-mac/
 boss-desktop-app/.venv/
 Boss_helper.app/
+.DS_Store
+.wrangler/
+node_modules/
+dist/
+
