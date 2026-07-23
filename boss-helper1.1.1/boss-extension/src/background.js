@@ -109,7 +109,7 @@ function progress(cur, total, label) {
 async function getCfg() {
   return chrome.storage.local.get([
     'keyword', 'city', 'count', 'dailyLimit',
-    'useAutoSendResume', 'useAutoSendImageResume', 'imageResumes',
+    'useAutoSendImageResume', 'imageResumes',
     'recruiterActivityStatus', 'excludeHeadhunters', 'excludeInterns',
     'resumeText', 'resumeAnalysis',
     'enableCompanyCheck', 'enableCompanyResearch',
@@ -654,7 +654,6 @@ async function runDeliver() {
       type: 'SEND_ALL',
       job,
       greeting,
-      useAutoSendResume: cfg.useAutoSendResume,
       useAutoSendImageResume: cfg.useAutoSendImageResume,
       imageResumes: cfg.imageResumes || []
     });

@@ -1,4 +1,4 @@
-// ===== 聊天页 content script：发图片简历 + 发招呼语 + 发附件简历 =====
+// ===== 聊天页 content script：发图片简历 + 发招呼语 =====
 (function () {
   if (window.__bossExtChat) return;
   window.__bossExtChat = true;
@@ -94,17 +94,6 @@
       if (after > before) return { ok: true };
     }
     return { ok: false, err: '发送未确认' };
-  }
-
-  async function sendResume() {
-    const btn = [...document.querySelectorAll(SELECTORS.chat.toolbarBtns)].find(el => el.textContent.trim() === '发简历');
-    if (!btn) return { ok: false, err: '未找到发简历按钮' };
-    if (btn.classList.contains('unable')) return { ok: false, err: '对方未回复，无法发送简历' };
-    btn.click();
-    await sleep(1500);
-    const confirmBtn = document.querySelector('.btn-sure-v2');
-    if (confirmBtn) { confirmBtn.click(); await sleep(1000); }
-    return { ok: true };
   }
 
   async function sendMultipleImages(imageResumes) {
@@ -220,12 +209,6 @@
     // 1. 发图片简历
     if (msg.useAutoSendImageResume && msg.imageResumes && msg.imageResumes.length) {
       await sendMultipleImages(msg.imageResumes);
-      await sleep(800);
-    }
-
-    // 2. 发附件简历
-    if (msg.useAutoSendResume) {
-      await sendResume();
       await sleep(800);
     }
 

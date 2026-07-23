@@ -75,7 +75,7 @@ async function getClientId() {
 
 const CFG_KEYS = [
   'keyword', 'city', 'count', 'dailyLimit',
-  'useAutoSendResume', 'useAutoSendImageResume',
+  'useAutoSendImageResume',
   'imageResumes', 'excludeHeadhunters', 'excludeInterns', 'recruiterActivityStatus',
   'resumeText', 'resumeAnalysis',
   'enableCompanyCheck', 'conversationStrategy',
@@ -298,7 +298,6 @@ function loadCfg() {
     if (d.city) $('city').value = d.city;
     if (d.count) $('count').value = d.count;
     if (d.dailyLimit) $('dailyLimit').value = d.dailyLimit;
-    $('useAutoSendResume').checked = d.useAutoSendResume === true;
     $('useAutoSendImageResume').checked = d.useAutoSendImageResume === true;
     $('excludeHeadhunters').checked = d.excludeHeadhunters === true;
     $('excludeInterns').checked = d.excludeInterns === true;
@@ -343,7 +342,6 @@ async function saveCfg() {
     city: $('city').value.trim(),
     count: parseInt($('count').value) || 20,
     dailyLimit: parseInt($('dailyLimit').value) || 100,
-    useAutoSendResume: $('useAutoSendResume').checked,
     useAutoSendImageResume: $('useAutoSendImageResume').checked,
     imageResumes,
     excludeHeadhunters: $('excludeHeadhunters').checked,
