@@ -77,7 +77,7 @@ const CFG_KEYS = [
   'keyword', 'city', 'count', 'dailyLimit',
   'useAutoSendImageResume',
   'imageResumes', 'excludeHeadhunters', 'excludeInterns', 'recruiterActivityStatus',
-  'resumeText', 'resumeAnalysis',
+  'resumeText',
   'enableCompanyCheck', 'conversationStrategy',
   'hrInactiveDays', 'jobTracker', 'dailyStats',
   'blacklist', 'salaryRange', 'resumes', 'interviews',
@@ -164,56 +164,6 @@ function renderImageResumes() {
   });
 }
 
-// 渲染分析结果显示区域（消除重复代码）
-function renderAnalysisDisplay(content) {
-  let d = document.getElementById('analysisDisplay');
-  if (!d) {
-    d = document.createElement('div');
-    d.id = 'analysisDisplay';
-    d.style.cssText = 'margin-top:8px;padding:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;font-size:12px;white-space:pre-wrap;max-height:150px;overflow-y:auto;';
-    $('resumeText').after(d);
-  }
-  d.textContent = 'AI分析：\n' + content;
-}
-
-// AI 分析简历（通过 Worker 代理，委托 background 统一调用）
-$('analyzeResumeBtn').addEventListener('click', async () => {
-  const resumeText = $('resumeText').value.trim();
-  if (!resumeText) return addLog('请先粘贴或导入简历内容', 'warn');
-
-  $('analyzeResumeBtn').textContent = '分析中...';
-  $('analyzeResumeBtn').disabled = true;
-  try {
-    const aiResult = await new Promise((resolve) => {
-      chrome.runtime.sendMessage({
-        type: 'AI_CHAT_REQUEST',
-        messages: [
-          { role: 'system', content: '你是专业求职顾问。分析简历提取：1)核心技能 2)适合岗位类型 3)工作经验亮点 4)个人优势。用- 开头，简洁结构化。' },
-          { role: 'user', content: '简历：\n' + resumeText.slice(0, 3000) }
-        ],
-        max_tokens: 800
-      }, (resp) => resolve(resp));
-    });
-
-    if (!aiResult || !aiResult.success) {
-      throw new Error(aiResult ? aiResult.error : '未知错误');
-    }
-    const analysis = aiResult.content || '';
-    if (analysis) {
-      await chrome.storage.local.set({ resumeAnalysis: analysis });
-      if (currentResumeName) {
-        const idx = resumes.findIndex(r => r.name === currentResumeName);
-        if (idx >= 0) { resumes[idx].analysis = analysis; renderResumeSelector(); }
-      }
-      addLog('简历分析完成', 'success');
-      renderAnalysisDisplay(analysis);
-    }
-  } catch (e) {
-    addLog('分析失败: ' + e.message, 'error');
-  }
-  $('analyzeResumeBtn').textContent = 'AI分析简历';
-  $('analyzeResumeBtn').disabled = false;
-});
 
 // ── 薪资范围选择 ──
 let salaryRange = '';
@@ -324,9 +274,6 @@ function loadCfg() {
     if (d.resumes) { resumes = d.resumes; renderResumeSelector(); }
     if (d.interviews) { interviews = d.interviews; renderInterviews(); }
     if (d.resumeText) $('resumeText').value = d.resumeText;
-    if (d.resumeAnalysis) {
-      renderAnalysisDisplay(d.resumeAnalysis);
-    }
     if (d.imageResumes) { imageResumes = d.imageResumes; renderImageResumes(); }
     if ($('useAutoSendImageResume').checked) $('addImageBtn').style.display = 'inline-block';
     // 4 个筛选维度

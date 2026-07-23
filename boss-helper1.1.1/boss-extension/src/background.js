@@ -111,7 +111,7 @@ async function getCfg() {
     'keyword', 'city', 'count', 'dailyLimit',
     'useAutoSendImageResume', 'imageResumes',
     'recruiterActivityStatus', 'excludeHeadhunters', 'excludeInterns',
-    'resumeText', 'resumeAnalysis',
+    'resumeText',
     'enableCompanyCheck', 'enableCompanyResearch',
     'hrInactiveDays', 'conversationStrategy',
     'blacklist', 'salaryRange', 'smartWorkdayOnly', 'smartAvoidLunch', 'smartAdaptiveInterval', 'smartGreetingPrompt',
@@ -269,9 +269,8 @@ async function generateGreeting(cfg, job, jd) {
   const jobTitle = job.fullName || job.name || '';
   const companyInfo = job.company ? ('（' + job.company + '）') : '';
   const salaryInfo = job.salary ? (' | 薪资：' + job.salary) : '';
-  // 交叉引用：简历分析 + 自定义提示词
+  // 交叉引用：自定义提示词
   let extraBlocks = '';
-  if (resumeAnalysis) extraBlocks += '\n\n【简历AI分析（核心技能/经验亮点/优势）】\n' + resumeAnalysis.slice(0, 600);
   if (smartPrompt) extraBlocks += '\n\n【用户额外要求】\n' + smartPrompt;
 
   const user = '【我的简历】\n' + (resumeText || '无') + extraBlocks +
