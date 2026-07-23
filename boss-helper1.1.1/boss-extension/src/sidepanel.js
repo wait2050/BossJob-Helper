@@ -81,7 +81,7 @@ const CFG_KEYS = [
   'enableCompanyCheck', 'conversationStrategy',
   'hrInactiveDays', 'jobTracker', 'dailyStats',
   'blacklist', 'salaryRange', 'resumes', 'interviews',
-  'smartSchedule', 'smartGreetingPrompt',
+  'smartWorkdayOnly', 'smartAvoidLunch', 'smartAdaptiveInterval', 'smartGreetingPrompt',
   'jobType', 'experience', 'degree', 'scale'
 ];
 
@@ -310,7 +310,9 @@ function loadCfg() {
     }
     if (d.recruiterActivityStatus) selectedActivity = d.recruiterActivityStatus;
     $('hrInactiveDays').value = d.hrInactiveDays || 14;
-    $('smartSchedule').checked = d.smartSchedule !== false;
+    $('smartWorkdayOnly').checked = d.smartWorkdayOnly !== false;
+    $('smartAvoidLunch').checked = d.smartAvoidLunch !== false;
+    $('smartAdaptiveInterval').checked = d.smartAdaptiveInterval !== false;
     if (d.smartGreetingPrompt) $('smartGreetingPrompt').value = d.smartGreetingPrompt;
     if (d.blacklist) $('blacklist').value = d.blacklist;
     if (d.salaryRange) {
@@ -351,7 +353,9 @@ async function saveCfg() {
     enableCompanyCheck: $('enableCompanyCheck').checked,
     conversationStrategy,
     hrInactiveDays: parseInt($('hrInactiveDays').value) || 14,
-    smartSchedule: $('smartSchedule').checked,
+    smartWorkdayOnly: $('smartWorkdayOnly').checked,
+    smartAvoidLunch: $('smartAvoidLunch').checked,
+    smartAdaptiveInterval: $('smartAdaptiveInterval').checked,
     smartGreetingPrompt: $('smartGreetingPrompt').value.trim(),
     blacklist: $('blacklist').value.trim(),
     salaryRange,

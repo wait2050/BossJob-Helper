@@ -114,7 +114,7 @@ async function getCfg() {
     'resumeText', 'resumeAnalysis',
     'enableCompanyCheck', 'enableCompanyResearch',
     'hrInactiveDays', 'conversationStrategy',
-    'blacklist', 'salaryRange', 'smartSchedule', 'smartGreetingPrompt',
+    'blacklist', 'salaryRange', 'smartWorkdayOnly', 'smartAvoidLunch', 'smartAdaptiveInterval', 'smartGreetingPrompt',
     'jobType', 'experience', 'degree', 'scale'
   ]);
 }
@@ -533,7 +533,9 @@ async function runDeliver() {
   const cfg = defaultCfg(await getCfg());
   log('🚀 开始投递，当前配置：' + JSON.stringify({
     '排除实习生': cfg.excludeInterns === true,
-    '智能调度': cfg.smartSchedule !== false
+    '仅工作日': cfg.smartWorkdayOnly !== false,
+    '避午休': cfg.smartAvoidLunch !== false,
+    '自适应间隔': cfg.smartAdaptiveInterval !== false
   }));
   const searchUrl = buildSearchUrl(cfg);
 
@@ -541,23 +543,31 @@ async function runDeliver() {
   for (let i = state.queueIndex; i < total; i++) {
     if (state.aborted || state.paused) break;
 
-    // 智能调度
-    if (cfg.smartSchedule) {
-      const now = new Date();
+    const now = new Date();
+
+    // 1. 仅工作日投递
+    if (cfg.smartWorkdayOnly !== false) {
       const dow = now.getDay(); // 0=Sun, 6=Sat
-      const hour = now.getHours();
       if (dow === 0 || dow === 6) {
-        log('⏸ 周末暂停投递（智能调度），周一自动恢复', 'warn');
+        log('⏸ 周末暂停投递（已开启仅工作日），周一自动恢复', 'warn');
         state.paused = true;
         break;
       }
+    }
+
+    // 2. 避开午休时段
+    if (cfg.smartAvoidLunch !== false) {
+      const hour = now.getHours();
       if (hour >= 12 && hour < 14) {
         log('⏸ 午休时段暂停（12-14点），14点后恢复', 'warn');
         await sleep(60000); // wait 1 min
         i--;
         continue;
       }
-      // 每投3个岗位后间隔加长
+    }
+
+    // 3. 自适应间隔
+    if (cfg.smartAdaptiveInterval !== false) {
       if (i > 0 && i % 3 === 0) {
         log('  智能间隔：休息30秒...');
         await sleep(30000);

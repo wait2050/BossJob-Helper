@@ -199,8 +199,16 @@
     <div class="card-b">
       <button class="btn-go" id="btnCollect">开始收集 + 投递</button>
       <div class="toggle-row" style="margin-top:4px;">
-        <span>智能调度（工作日+避午休+自适应间隔）</span>
-        <label class="switch"><input type="checkbox" id="smartSchedule" checked><span class="slider"></span></label>
+        <span>仅工作日投递（周末自动暂停）</span>
+        <label class="switch"><input type="checkbox" id="smartWorkdayOnly" checked><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span>避开午休时段（12点-14点暂停）</span>
+        <label class="switch"><input type="checkbox" id="smartAvoidLunch" checked><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span>自适应间隔（每投3个岗位休息30秒）</span>
+        <label class="switch"><input type="checkbox" id="smartAdaptiveInterval" checked><span class="slider"></span></label>
       </div>
       <div class="status-row">
         <span id="phaseText">就绪</span>
