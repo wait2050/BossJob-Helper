@@ -7,7 +7,7 @@ const emit = (evt, payload) => (window.__TAURI__ ? window.__TAURI__.event.emit(e
 const listen = (evt, handler) => (window.__TAURI__ ? window.__TAURI__.event.listen(evt, handler) : Promise.resolve(() => {}));
 
 // ===== Worker 后端地址 =====
-const API_BASE = 'https://boss.luckyioo.cc.cd';
+const API_BASE = 'https://boss.morpheus95.xyz';
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rand = (a, b) => sleep(a + Math.random() * (b - a));

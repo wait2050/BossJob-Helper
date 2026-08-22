@@ -30,7 +30,7 @@ const OBFUSCATOR_OPTIONS = {
     'console', 'crypto', 'URL', 'Response', 'Request'
   ],
   reservedStrings: [
-    'chrome://', 'chrome-extension://', 'https://boss.luckyioo.cc.cd'
+    'chrome://', 'chrome-extension://', 'https://boss.morpheus95.xyz', 'https://boss.luckyioo.cc.cd'
   ]
 };
 

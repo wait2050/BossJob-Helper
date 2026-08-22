@@ -1,8 +1,8 @@
 // ===== Boss海投助手 侧边栏 UI 逻辑 =====
 const $ = id => document.getElementById(id);
 
-// ===== Worker 后端地址（部署后替换 YOUR_SUBDOMAIN）=====
-const API_BASE = 'https://boss.luckyioo.cc.cd';
+// ===== Worker 后端地址 =====
+const API_BASE = 'https://boss.morpheus95.xyz';
 
 // ===== BOSS直聘 URL 筛选维度选项（编码不准可在此调整）=====
 const FILTER_OPTIONS = {
@@ -912,3 +912,91 @@ loadAndRenderHistory();
   }
 })();
 
+// ── 版本检测与更新提示 UI 逻辑 ──
+const CURRENT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : '1.1.1';
+
+function semverCompare(a, b) {
+  if (!a || !b) return 0;
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = pa[i] || 0;
+    const nb = pb[i] || 0;
+    if (na > nb) return 1;
+    if (na < nb) return -1;
+  }
+  return 0;
+}
+
+async function renderVersionUI(versionInfo) {
+  if (!versionInfo) return;
+  const { latest_version, min_version, download_url, changelog } = versionInfo;
+
+  // 1. 强更校验
+  if (min_version && semverCompare(CURRENT_VERSION, min_version) < 0) {
+    if ($('forceUpdateModal')) $('forceUpdateModal').style.display = 'flex';
+    if ($('currentVerTag')) $('currentVerTag').textContent = CURRENT_VERSION;
+    if ($('forceDownloadBtn')) $('forceDownloadBtn').href = download_url || API_BASE;
+    if ($('forceChangelogList')) {
+      $('forceChangelogList').innerHTML = (changelog || []).map(item => '<li>' + item + '</li>').join('');
+    }
+    const btnStart = $('btnStart');
+    if (btnStart) {
+      btnStart.disabled = true;
+      btnStart.title = '插件版本已停用，请更新后继续';
+    }
+    return;
+  }
+
+  // 2. 普通更新校验
+  if (latest_version && semverCompare(CURRENT_VERSION, latest_version) < 0) {
+    const { ignored_version } = await chrome.storage.local.get('ignored_version');
+    if (ignored_version === latest_version) return;
+
+    if ($('updateBanner')) $('updateBanner').style.display = 'block';
+    if ($('updateVerTag')) $('updateVerTag').textContent = 'v' + latest_version;
+    if ($('downloadUpdateBtn')) $('downloadUpdateBtn').href = download_url || API_BASE;
+    if ($('updateChangelogList')) {
+      $('updateChangelogList').innerHTML = (changelog || []).map(item => '<li>' + item + '</li>').join('');
+    }
+  }
+}
+
+// 绑定 Banner 交互
+if ($('closeUpdateBannerBtn')) {
+  $('closeUpdateBannerBtn').addEventListener('click', async () => {
+    if ($('updateBanner')) $('updateBanner').style.display = 'none';
+    const { version_info } = await chrome.storage.local.get('version_info');
+    if (version_info && version_info.latest_version) {
+      await chrome.storage.local.set({ ignored_version: version_info.latest_version });
+    }
+  });
+}
+
+if ($('toggleChangelogBtn')) {
+  $('toggleChangelogBtn').addEventListener('click', () => {
+    const box = $('updateChangelogBox');
+    if (box) {
+      const isHidden = box.style.display === 'none';
+      box.style.display = isHidden ? 'block' : 'none';
+      $('toggleChangelogBtn').textContent = isHidden ? '🙈 隐藏更新说明' : '📋 查看更新说明';
+    }
+  });
+}
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'VERSION_UPDATE' && msg.versionInfo) {
+    renderVersionUI(msg.versionInfo);
+  }
+});
+
+// 检查与同步版本
+(async () => {
+  const { version_info } = await chrome.storage.local.get('version_info');
+  if (version_info) renderVersionUI(version_info);
+  chrome.runtime.sendMessage({ type: 'CHECK_VERSION' }, (res) => {
+    if (res && res.versionInfo) renderVersionUI(res.versionInfo);
+  });
+})();
+
+>>>>>>> ca85d07 (fix: update API_BASE domain to boss.morpheus95.xyz and fix version sync)

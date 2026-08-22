@@ -1,8 +1,8 @@
 // ===== Boss海投助手 Service Worker：编排 收集→投递→跨页面接力 =====
 importScripts('/src/selectors.js');
 
-// ===== Worker 后端地址（部署后替换 YOUR_SUBDOMAIN）=====
-const API_BASE = 'https://boss.luckyioo.cc.cd';
+// ===== Worker 后端地址 =====
+const API_BASE = 'https://boss.morpheus95.xyz';
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rand = (a, b) => sleep(a + Math.random() * (b - a));

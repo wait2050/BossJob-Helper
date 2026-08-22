@@ -70,8 +70,7 @@ const chromeStorageOnChanged = {
 
 // chrome.tabs 兼容层 (limited)
 const chromeTabs = {
-  async query(queryInfo, callback) {
-    if (callback) callback([]);
+  async query(queryInfo) {
     return [];
   },
   async update(tabId, props) { /* no-op */ }
@@ -80,8 +79,8 @@ const chromeTabs = {
 // ===== Boss海投助手 侧边栏 UI 逻辑 =====
 const $ = id => document.getElementById(id);
 
-// ===== Worker 后端地址（部署后替换 YOUR_SUBDOMAIN）=====
-const API_BASE = 'https://boss.luckyioo.cc.cd';
+// ===== Worker 后端地址 =====
+const API_BASE = 'https://boss.morpheus95.xyz';
 
 // ===== BOSS直聘 URL 筛选维度选项（编码不准可在此调整）=====
 const FILTER_OPTIONS = {
@@ -962,7 +961,7 @@ loadAndRenderHistory();
 })();
 
 // ── 版本检测与更新提示 UI 逻辑 ──
-const CURRENT_VERSION = '1.1.0';
+const CURRENT_VERSION = '1.1.1';
 
 function semverCompare(a, b) {
   if (!a || !b) return 0;
@@ -1039,13 +1038,26 @@ chromeRuntime.onMessage.addListener((msg) => {
   }
 });
 
-// 检查与同步版本
+// 检查与同步版本及云端配置
 (async () => {
   const { version_info } = await chromeStorageLocal.get('version_info');
   if (version_info) renderVersionUI(version_info);
-  chromeRuntime.sendMessage({ type: 'CHECK_VERSION' }, (res) => {
-    if (res && res.versionInfo) renderVersionUI(res.versionInfo);
-  });
+  try {
+    const resp = await fetch(API_BASE + '/api/config', { method: 'GET' });
+    const data = await resp.json();
+    if (data) {
+      if (data.version_info) {
+        await chromeStorageLocal.set({ version_info: data.version_info });
+        renderVersionUI(data.version_info);
+      }
+      if (data.remote_selectors && typeof applyRemoteSelectors === 'function') {
+        applyRemoteSelectors(data.remote_selectors);
+        await chromeStorageLocal.set({ remote_selectors: data.remote_selectors });
+      }
+    }
+  } catch (e) {
+    console.warn('Fetch remote config failed', e);
+  }
 })();
 })();
 

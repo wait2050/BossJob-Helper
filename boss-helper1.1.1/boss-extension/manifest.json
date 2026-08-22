@@ -9,6 +9,7 @@
   "permissions": ["storage", "tabs", "scripting", "sidePanel"],
   "host_permissions": [
     "*://*.zhipin.com/*",
+    "https://boss.morpheus95.xyz/*",
     "https://boss.luckyioo.cc.cd/*"
   ],
   "background": { "service_worker": "src/background.js" },
