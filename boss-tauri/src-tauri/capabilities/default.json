@@ -1,0 +1,21 @@
+{
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "webviews": ["*"],
+  "remote": {
+    "urls": ["https://*.zhipin.com/*"]
+  },
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "core:event:default",
+    "core:event:allow-emit",
+    "core:event:allow-listen",
+    "core:webview:default",
+    "core:webview:allow-create-webview",
+    "core:webview:allow-create-webview-window",
+    "core:window:default",
+    "core:window:allow-create"
+  ]
+}
