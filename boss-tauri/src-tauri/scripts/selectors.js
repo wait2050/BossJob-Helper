@@ -76,23 +76,29 @@ const CONFIG = {
 // 注入 CSS 强制这些容器自适应宽度
 (function injectLayoutFix() {
   const css = `
-    #wrap, .page-jobs, .page-jobs-main {
+    #wrap, .page-jobs, .page-jobs-main, #main, .job-box, #header, .header-nav {
       min-width: 0 !important;
       width: 100% !important;
       max-width: 100% !important;
     }
     html, body {
       min-width: 0 !important;
-      overflow-x: hidden !important;
+      overflow-x: auto !important;
     }
-    /* BOSS 直聘所有 -inner 固定宽度容器(诊断显示均为 1136px) */
+    /* BOSS 直聘所有 -inner 与定宽容器(自适应窗口宽度，防止右侧截断) */
     .inner, .home-inner,
     .expect-search-inner,
     .filter-condition-inner, .c-filter-condition,
-    .recommend-result-inner, .recommend-result-job {
+    .recommend-result-inner, .recommend-result-job,
+    .job-list-wrapper, .job-tab-box, .search-box, .job-side-wrapper,
+    .job-search-wrapper, .job-search-box, .job-list-container {
       width: 100% !important;
       max-width: 100% !important;
       min-width: 0 !important;
+    }
+    .job-card-wrapper, .job-card-box {
+      width: 100% !important;
+      max-width: 100% !important;
     }
   `;
   const style = document.createElement('style');

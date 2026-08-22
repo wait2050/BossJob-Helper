@@ -7,4 +7,5 @@ Boss_helper.app/
 .wrangler/
 node_modules/
 dist/
+releases/
 

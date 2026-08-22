@@ -1,6 +1,6 @@
 mod storage;
 
-use tauri::{LogicalPosition, LogicalSize, WebviewUrl, Manager};
+use tauri::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, WebviewUrl, Manager};
 use tauri::window::WindowBuilder;
 use tauri::webview::WebviewBuilder;
 
@@ -8,6 +8,22 @@ const SELECTORS_JS: &str = include_str!("../scripts/selectors.js");
 const CONTENT_SEARCH_JS: &str = include_str!("../scripts/content-search.js");
 const CONTENT_CHAT_JS: &str = include_str!("../scripts/content-chat.js");
 const BACKGROUND_JS: &str = include_str!("../scripts/background.js");
+
+// 布局自适应更新函数:使用真实的物理像素进行 Webview 边界分割，兼容 Windows 高 DPI (125%/150%/200%) 与窗口最大化缩放
+fn layout_webviews(app_handle: &tauri::AppHandle, physical_size: PhysicalSize<u32>, scale: f64) {
+    let panel_width_logical = 380.0_f64;
+    let panel_width_physical = (panel_width_logical * scale).round() as u32;
+    let boss_width_physical = physical_size.width.saturating_sub(panel_width_physical);
+
+    if let Some(boss) = app_handle.get_webview("boss-webview") {
+        let _ = boss.set_position(PhysicalPosition::new(0, 0));
+        let _ = boss.set_size(PhysicalSize::new(boss_width_physical, physical_size.height));
+    }
+    if let Some(panel) = app_handle.get_webview("panel-webview") {
+        let _ = panel.set_position(PhysicalPosition::new(boss_width_physical as i32, 0));
+        let _ = panel.set_size(PhysicalSize::new(panel_width_physical, physical_size.height));
+    }
+}
 
 #[tauri::command]
 async fn navigate_to(app: tauri::AppHandle, url: String) -> Result<(), String> {
@@ -146,11 +162,16 @@ pub fn run() {
                 LogicalSize::new(panel_width, height),
             )?;
 
-            // macOS 上 add_child 的初始 size 参数可能不生效,显式设置一次确保布局正确
-            let _ = boss_webview.set_position(LogicalPosition::new(0.0, 0.0));
-            let _ = boss_webview.set_size(LogicalSize::new(boss_width, height));
-            let _ = panel_webview.set_position(LogicalPosition::new(boss_width, 0.0));
-            let _ = panel_webview.set_size(LogicalSize::new(panel_width, height));
+            // 立即使用实际窗口的 inner_size 尺寸执行物理像素级精确定位
+            let initial_scale = window.scale_factor().unwrap_or(1.0);
+            if let Ok(inner) = window.inner_size() {
+                layout_webviews(&app.handle(), inner, initial_scale);
+            } else {
+                let _ = boss_webview.set_position(LogicalPosition::new(0.0, 0.0));
+                let _ = boss_webview.set_size(LogicalSize::new(boss_width, height));
+                let _ = panel_webview.set_position(LogicalPosition::new(boss_width, 0.0));
+                let _ = panel_webview.set_size(LogicalSize::new(panel_width, height));
+            }
 
             // 开发模式自动打开 panel-webview 的 devtools 便于调试
             #[cfg(debug_assertions)]
@@ -158,27 +179,19 @@ pub fn run() {
                 let _ = panel_webview.open_devtools();
             }
 
-            // Handle window resize to adjust webview sizes
+            // Handle window resize and scale factor changes to dynamically adjust webview sizes
             let app_handle = app.handle().clone();
-            window.on_window_event(move |event| {
-                if let tauri::WindowEvent::Resized(_size) = event {
-                    if let Some(main_window) = app_handle.get_webview_window("main") {
-                        let scale = main_window.scale_factor().unwrap_or(1.0);
-                        let outer = main_window.outer_size().unwrap_or_default();
-                        let new_width = outer.width as f64 / scale;
-                        let new_height = outer.height as f64 / scale;
-                        let new_boss_width = new_width - panel_width;
-
-                        if let Some(boss) = app_handle.get_webview("boss-webview") {
-                            let _ = boss.set_position(LogicalPosition::new(0.0, 0.0));
-                            let _ = boss.set_size(LogicalSize::new(new_boss_width, new_height));
-                        }
-                        if let Some(panel) = app_handle.get_webview("panel-webview") {
-                            let _ = panel.set_position(LogicalPosition::new(new_boss_width, 0.0));
-                            let _ = panel.set_size(LogicalSize::new(panel_width, new_height));
-                        }
+            window.on_window_event(move |event| match event {
+                tauri::WindowEvent::Resized(physical_size) => {
+                    if let Some(main_win) = app_handle.get_window("main") {
+                        let scale = main_win.scale_factor().unwrap_or(1.0);
+                        layout_webviews(&app_handle, *physical_size, scale);
                     }
                 }
+                tauri::WindowEvent::ScaleFactorChanged { scale_factor, new_inner_size, .. } => {
+                    layout_webviews(&app_handle, *new_inner_size, *scale_factor);
+                }
+                _ => {}
             });
 
             Ok(())
@@ -186,3 +199,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
